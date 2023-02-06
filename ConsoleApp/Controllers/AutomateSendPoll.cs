@@ -104,7 +104,7 @@ public class AutomateSendPoll
                 throw new Exception("Error Happen");
     }
 
-    public async Task StartCompsciedu(string url, int startPage, int endPage, string nameOfTheFile)
+    public async Task StartCompsciedu(string url, int startPage, int endPage)
     {
         for (; startPage <= endPage; startPage++)
         {
@@ -114,14 +114,14 @@ public class AutomateSendPoll
         }
     }
 
-    public async Task StartWordByWordMCQPdf(string path, string outPath)
+    public async Task StartWordByWordMCQPdf(string path)
     {
         var scrapper = new PdfScrapper<IEnumerable<QuizModel>>(new WordByWordMcqPdf(path));
         if (await _sender.Send(_chatId, await scrapper.GetData()) == false)
             throw new Exception("Error Happen");
     }
 
-    public async Task StartWordByWordTAndFPdf(string path, string outPath)
+    public async Task StartWordByWordTAndFPdf(string path)
     {
         var scrapper = new PdfScrapper<IEnumerable<QuizModel>>(new WordByWordTAndFPdf(path));
         if (await _sender.Send(_chatId, await scrapper.GetData()) == false)
@@ -142,7 +142,7 @@ public class AutomateSendPoll
         var text = string.Join("\n\n-------------------------\n\n", quizzes
             .Select(qu =>
                 $"Q) {qu.Question}\n\n\n" +
-                $"{string.Join("\n", qu.GetOptions().Select(a => $"{a}"))}\n\n" +
+                $"{string.Join("\n", qu.GetOptions())}\n\n" +
                 $"Answer: {qu.RightAnswer}\n" +
                 $"Explanation: {qu.Explanation}"
             ));
