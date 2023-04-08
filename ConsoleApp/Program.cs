@@ -17,4 +17,5 @@ var api = telegramConfig.BaseApi + args[0];
 IQuizModelTelegramSender sender = new TelegramBot(api);
 var autoSender = new AutomateSendPoll(telegramConfig.Chats.DistributedGroup, sender);
 
-await autoSender.StartSanFoundryImageProcessing();
+// await autoSender.StartSanFoundryImageProcessing();
+await autoSender.StartSanFoundryAI();

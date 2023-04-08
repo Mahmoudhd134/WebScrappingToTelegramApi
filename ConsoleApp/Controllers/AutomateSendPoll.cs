@@ -45,6 +45,30 @@ public class AutomateSendPoll
                 throw new Exception("Error Happen");
     }
 
+    public async Task StartSanFoundryAI()
+    {
+        var scrapper = new WebScrapper<IEnumerable<string>>(
+            new SanFoundryWebSitePages(
+                "https://www.sanfoundry.com/1000-neural-networks-questions-answers/"));
+
+        var links = await scrapper.GetData();
+
+        IEnumerable<WebScrapper<IEnumerable<QuizModel>>> WebScrappers()
+        {
+            foreach (var site in links.Skip(6).Take(23))
+                yield return new WebScrapper<IEnumerable<QuizModel>>(new SanFoundryAltimate(site));
+        }
+
+        // foreach (var webScrapper in WebScrappers())
+            // if (await _sender.Send(_chatId, await webScrapper.GetData()) == false)
+                // throw new Exception("Error Happen");
+                
+        List<QuizModel> quizModels = new();
+        foreach (var webScrapper in WebScrappers())
+            quizModels.AddRange(await webScrapper.GetData());
+        await MakeAFileAsync(quizModels, @"C:\Users\nasse\OneDrive\Desktop\d.txt");
+    }
+
     public async Task StartSanFoundryAlgorithms()
     {
         IEnumerable<string> GetSites()
@@ -137,7 +161,7 @@ public class AutomateSendPoll
             throw new Exception("Error Happened");
     }
 
-    public async Task MakeAFile(IEnumerable<QuizModel> quizzes, string outPath)
+    public async Task MakeAFileAsync(IEnumerable<QuizModel> quizzes, string outPath)
     {
         var text = string.Join("\n\n-------------------------\n\n", quizzes
             .Select(qu =>

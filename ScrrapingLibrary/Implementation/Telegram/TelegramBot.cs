@@ -18,6 +18,9 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
 
     public async Task<bool> SendMsg(TelegramMsg telegramMsg)
     {
+        if (string.IsNullOrWhiteSpace(telegramMsg.text.Trim()))
+            return true;
+
         var json = JsonConvert.SerializeObject(telegramMsg);
         return await SendPostRequest(EndPoints.SendMessage, json);
     }
@@ -92,7 +95,7 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
             if (await SendQuiz(new TelegramQuiz
                 {
                     chat_id = chatId,
-                    question = quizModel.Question,
+                    question = quizModel.Question.Trim(),
                     options = quizModel.GetOptions(),
                     correct_option_id = quizModel.GetCorrectOptionId(),
                     is_anonymous = false
@@ -102,7 +105,8 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
         {
             var telegramMessages = new List<string>
             {
-                quizModel.Question ?? "", quizModel.AnswerA ?? "", quizModel.AnswerB ?? "", quizModel.AnswerC ?? "",
+                quizModel.Question.Trim() ?? "", quizModel.AnswerA ?? "", quizModel.AnswerB ?? "",
+                quizModel.AnswerC ?? "",
                 quizModel.AnswerD ?? "", quizModel.AnswerE ?? ""
             }.Select(m => new TelegramMsg { chat_id = chatId, text = m });
 
@@ -121,7 +125,8 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
         {
             var telegramMessages = new List<string>
             {
-                quizModel.Question ?? "", quizModel.AnswerA ?? "", quizModel.AnswerB ?? "", quizModel.AnswerC ?? "",
+                quizModel.Question.Trim() ?? "", quizModel.AnswerA ?? "", quizModel.AnswerB ?? "",
+                quizModel.AnswerC ?? "",
                 quizModel.AnswerD ?? "", quizModel.AnswerE ?? ""
             }.Select(m => new TelegramMsg { chat_id = chatId, text = m });
 
@@ -144,6 +149,45 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
         else if (quizModel.ValidateQuiz() == QuizValidationTypes.HasImages)
         {
             //todo
+
+            var telegramMessages = new List<string>
+            {
+                quizModel.Question.Trim() ?? "", quizModel.AnswerA ?? "", quizModel.AnswerB ?? "",
+                quizModel.AnswerC ?? "",
+                quizModel.AnswerD ?? "", quizModel.AnswerE ?? ""
+            }.Select(m => new TelegramMsg { chat_id = chatId, text = m });
+
+            // if (await SendMsg(telegramMessages) == false) return false;
+            foreach (var msg in telegramMessages)
+            {
+                if (string.IsNullOrWhiteSpace(msg.text.Trim()))
+                    continue;
+                if (msg.text.ToLower().Contains("http") == false)
+                {
+                    if (await SendMsg(msg) == false) return false;
+                    Thread.Sleep(4000);
+                    continue;
+                }
+
+                var url = msg.text.Split("\n")
+                    .First(s => s.Trim().StartsWith("http"));
+                msg.text = string.Join("\n", msg.text.Split("\n")
+                    .Where(s => s.Trim().StartsWith("http") == false && string.IsNullOrWhiteSpace(s) == false));
+                Thread.Sleep(2000);
+                if (await SendPhoto(new TelegramPhoto { photo = url, chat_id = chatId }) == false) return false;
+                Thread.Sleep(4000);
+                if (await SendMsg(msg) == false) return false;
+                Thread.Sleep(2000);
+            }
+
+            if (await SendQuiz(new TelegramQuiz
+                {
+                    chat_id = chatId,
+                    question = "the prev question",
+                    options = new string[] { "a", "b", "c", "d", "e" },
+                    correct_option_id = quizModel.GetCorrectOptionId(),
+                    is_anonymous = false
+                }) == false) return false;
         }
         else if (quizModel.ValidateQuiz() == QuizValidationTypes.NotValid)
         {
@@ -163,17 +207,17 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
         var i = 0;
         foreach (var quiz in quizModels)
         {
-            if (i++ % 10 == 0)
-            {
-                var messages = new string[]
-                    {
-                        new string('-', 20),
-                        "اللهم صلى و سلم على سيدنا محمد و على اله و اصحابه اجمعين",
-                        new string('-', 20)
-                    }
-                    .Select(s => new TelegramMsg { chat_id = chatId, text = s });
-                if (await SendMsg(messages) == false) return false;
-            }
+            // if (i++ % 10 == 0)
+            // {
+            //     var messages = new string[]
+            //         {
+            //             new string('-', 20),
+            //             "اللهم صلى و سلم على سيدنا محمد و على اله و اصحابه اجمعين",
+            //             new string('-', 20)
+            //         }
+            //         .Select(s => new TelegramMsg { chat_id = chatId, text = s });
+            //     if (await SendMsg(messages) == false) return false;
+            // }
 
             if (await Send(chatId, quiz) == false)
                 return false;
@@ -184,11 +228,29 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
         return true;
     }
 
+    public async Task<bool> Send(string chatId, QuizGroup quizGroup)
+    {
+        if (await SendMsg(new TelegramMsg { chat_id = chatId, text = quizGroup.Title }) == false)
+            return false;
+
+        Thread.Sleep(4000);
+        var messages = new string[]
+            {
+                new string('-', 20),
+                "اللهم صلى و سلم على سيدنا محمد و على اله و اصحابه اجمعين",
+                new string('-', 20)
+            }
+            .Select(s => new TelegramMsg { chat_id = chatId, text = s });
+        if (await SendMsg(messages) == false) return false;
+        return await Send(chatId, quizGroup.QuizModels);
+    }
+
     private async Task<bool> SendPostRequest(EndPoints endPoint, string json)
     {
         var dataContent = new StringContent(json, Encoding.UTF8, "application/json");
         var httpClint = new HttpClient();
         var response = await httpClint.PostAsync(_api + "/" + endPoint, dataContent);
+        var x = response.Content;
         return response.IsSuccessStatusCode;
     }
 }
