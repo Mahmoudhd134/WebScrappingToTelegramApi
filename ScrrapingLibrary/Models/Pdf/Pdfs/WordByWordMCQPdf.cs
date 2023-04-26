@@ -10,6 +10,7 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
         public WordByWordMcqPdf(string path) : base(path)
         {
         }
+
         public override Task<IEnumerable<QuizModel>> Parse()
         {
             return Task.FromResult(Extract());
@@ -30,20 +31,18 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
             var currentQuizNum = 0;
             var mode = StructForQuiz.Nothing;
             var quiz = new QuizModel();
-            var first = true;
             foreach (var word in content)
             {
-                if (word.Equals("XXxxXXxx"))
+                if (word.ToLower().StartsWith((currentQuizNum + 1).ToString() + '.') ||
+                    word.ToLower().StartsWith((currentQuizNum + 1).ToString() + '-') ||
+                    word.ToLower().StartsWith((currentQuizNum + 2).ToString() + '.') ||
+                    word.ToLower().StartsWith((currentQuizNum + 2).ToString() + '-') ||
+                    word.ToLower().StartsWith((currentQuizNum).ToString() + '.') ||
+                    word.ToLower().StartsWith((currentQuizNum).ToString() + '-'))
                 {
-                    first = false;
-                    currentQuizNum = 0;
-                }
-
-                if (word.ToLower().StartsWith((currentQuizNum + 1).ToString() + '.'))
-                {
-                    if (currentQuizNum != 0 || first == false)
+                    if (currentQuizNum != 0)
                     {
-                        quiz.RightAnswer = "";
+                        // quiz.RightAnswer = "";
                         yield return quiz;
                         quiz = new QuizModel();
                     }
@@ -52,30 +51,34 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
                     mode = StructForQuiz.Question;
                     quiz.Question = word;
                 }
-                else if (word.ToLower().StartsWith("a-"))
+                else if (word.ToLower().StartsWith("a)"))
                 {
                     mode = StructForQuiz.AnswerA;
                     quiz.AnswerA = word;
                 }
-                else if (word.ToLower().StartsWith("b-"))
+                else if (word.ToLower().StartsWith("b)"))
                 {
                     mode = StructForQuiz.AnswerB;
                     quiz.AnswerB = word;
                 }
-                else if (word.ToLower().StartsWith("c-"))
+                else if (word.ToLower().StartsWith("c)"))
                 {
                     mode = StructForQuiz.AnswerC;
                     quiz.AnswerC = word;
                 }
-                else if (word.ToLower().StartsWith("d-"))
+                else if (word.ToLower().StartsWith("d)"))
                 {
                     mode = StructForQuiz.AnswerD;
                     quiz.AnswerD = word;
                 }
-                else if (word.ToLower().StartsWith("e-"))
+                else if (word.ToLower().StartsWith("e)"))
                 {
                     mode = StructForQuiz.AnswerE;
                     quiz.AnswerE = word;
+                }
+                else if (word.ToLower().StartsWith("answer:"))
+                {
+                    mode = StructForQuiz.CorrectAnswer;
                 }
                 else
                 {
@@ -105,6 +108,10 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
                             quiz.AnswerE += " " + word;
                             break;
 
+                        case StructForQuiz.CorrectAnswer:
+                            quiz.RightAnswer = word;
+                            break;
+
                         default:
                             // throw new NotImplementedException("The line starts with un expected value");
                             break;
@@ -112,7 +119,7 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
                 }
             }
 
-            quiz.RightAnswer = "";
+            // quiz.RightAnswer = "";
             yield return quiz;
         }
     }

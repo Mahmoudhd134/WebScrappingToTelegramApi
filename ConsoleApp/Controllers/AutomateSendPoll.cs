@@ -18,6 +18,13 @@ public class AutomateSendPoll
         _sender = sender;
     }
 
+    public async Task StartOSPdf(string path)
+    {
+        IScrapper<IEnumerable<QuizModel>> scrapper = new PdfScrapper<IEnumerable<QuizModel>>(new OSPdfs(path));
+        if (await _sender.Send(_chatId, await scrapper.GetData()) == false)
+            throw new Exception("Error Happened");
+    }
+
     public async Task StartPdf(string path)
     {
         IScrapper<IEnumerable<QuizModel>> scrapper = new PdfScrapper<IEnumerable<QuizModel>>(new ImageQuizPdf(path));
@@ -60,9 +67,9 @@ public class AutomateSendPoll
         }
 
         // foreach (var webScrapper in WebScrappers())
-            // if (await _sender.Send(_chatId, await webScrapper.GetData()) == false)
-                // throw new Exception("Error Happen");
-                
+        // if (await _sender.Send(_chatId, await webScrapper.GetData()) == false)
+        // throw new Exception("Error Happen");
+
         List<QuizModel> quizModels = new();
         foreach (var webScrapper in WebScrappers())
             quizModels.AddRange(await webScrapper.GetData());

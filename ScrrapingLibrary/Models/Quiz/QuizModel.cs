@@ -50,7 +50,7 @@
             if (string.IsNullOrWhiteSpace(Question))
                 return QuizValidationTypes.NotValid;
 
-            if (RightAnswer.Length > 1)
+            if (RightAnswer?.Length > 1)
                 return QuizValidationTypes.MultipleAnswers;
 
             if (Question?.Length > 300)

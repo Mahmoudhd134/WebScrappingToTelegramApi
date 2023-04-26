@@ -31,22 +31,18 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
             var currentQuizNum = 0;
             var mode = StructForQuiz.Nothing;
             var quiz = new QuizModel();
-            var first = true;
             foreach (var word in content)
             {
                 quiz.AnswerA = "True";
                 quiz.AnswerB = "False";
-                quiz.RightAnswer = "";
-                if (word.Equals("XXxxXXxx"))
-                {
-                    first = false;
-                    currentQuizNum = 0;
-                }
 
-                if (word.ToLower().StartsWith((currentQuizNum + 1).ToString() + '-'))
+                if (word.ToLower().StartsWith((currentQuizNum + 1).ToString() + '.'))
                 {
-                    if (currentQuizNum != 0 || first == false)
+                    if (currentQuizNum != 0)
                     {
+                        quiz.Question = string.Join(" ", quiz.Question.Split(" ")
+                            .Where(s => s.ToLower().Equals("(true)") == false &&
+                                        s.ToLower().Equals("(false)") == false));
                         yield return quiz;
                         quiz = new QuizModel();
                     }
@@ -54,6 +50,16 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
                     currentQuizNum++;
                     mode = StructForQuiz.Question;
                     quiz.Question = word;
+                }
+                else if (word.ToLower().Contains("true"))
+                {
+                    mode = StructForQuiz.CorrectAnswer;
+                    quiz.RightAnswer = "A";
+                }
+                else if (word.ToLower().Contains("false"))
+                {
+                    mode = StructForQuiz.CorrectAnswer;
+                    quiz.RightAnswer = "B";
                 }
                 else
                 {
@@ -72,7 +78,6 @@ namespace ScrapingLibrary.Models.Pdf.Pdfs
 
             quiz.AnswerA = "True";
             quiz.AnswerB = "False";
-            quiz.RightAnswer = "";
             yield return quiz;
         }
     }

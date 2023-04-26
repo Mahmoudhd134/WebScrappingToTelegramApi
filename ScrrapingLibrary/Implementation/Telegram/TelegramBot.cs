@@ -194,12 +194,13 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
             throw new ArgumentException("The Quiz Is Not a Valid Quiz");
         }
 
-        Thread.Sleep(4000);
-        return await SendMsg(new TelegramMsg
-        {
-            chat_id = chatId,
-            text = $"Explanation => {quizModel.Explanation}"
-        });
+        // Thread.Sleep(4000);
+        // return await SendMsg(new TelegramMsg
+        // {
+        //     chat_id = chatId,
+        //     text = $"Explanation => {quizModel.Explanation}"
+        // });
+        return true;
     }
 
     public async Task<bool> Send(string chatId, IEnumerable<QuizModel> quizModels)
@@ -207,17 +208,20 @@ public class TelegramBot : ITelegramBot, IQuizModelTelegramSender
         var i = 0;
         foreach (var quiz in quizModels)
         {
-            // if (i++ % 10 == 0)
-            // {
-            //     var messages = new string[]
-            //         {
-            //             new string('-', 20),
-            //             "اللهم صلى و سلم على سيدنا محمد و على اله و اصحابه اجمعين",
-            //             new string('-', 20)
-            //         }
-            //         .Select(s => new TelegramMsg { chat_id = chatId, text = s });
-            //     if (await SendMsg(messages) == false) return false;
-            // }
+            if(string.IsNullOrWhiteSpace(quiz.RightAnswer))
+                continue;
+            Console.Write($"\rQuiz {i} Done!! => {quiz.Question.Split(" ").First()}");
+            if (i++ % 10 == 0)
+            {
+                var messages = new string[]
+                    {
+                        new string('-', 20),
+                        "اللهم صلى و سلم على سيدنا محمد و على اله و اصحابه اجمعين",
+                        new string('-', 20)
+                    }
+                    .Select(s => new TelegramMsg { chat_id = chatId, text = s });
+                if (await SendMsg(messages) == false) return false;
+            }
 
             if (await Send(chatId, quiz) == false)
                 return false;
