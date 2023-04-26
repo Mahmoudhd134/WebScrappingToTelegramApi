@@ -106,10 +106,10 @@ public class ScrappingSites
         var pagesScrapper = new WebScrapper<IEnumerable<string>>(new KolNovelPages(url));
         var pages = (await pagesScrapper.GetData()).ToList();
         var chapters = new List<IEnumerable<string>>();
-        var i = 2100;
+        var i = 0;
         for (; i < pages.Count; i++)
         {
-            if (i % numberOfChaptersPerFile == 0 && i != 2100)
+            if (i % numberOfChaptersPerFile == 0 && i != 0)
             {
                 var d = $@"{dir}\{i + 1 - numberOfChaptersPerFile}-{i}.txt";
                 await File.WriteAllLinesAsync(d, chapters
@@ -124,8 +124,9 @@ public class ScrappingSites
             Console.Write($"\rNumber ({i}) Done!!");
         }
 
-        var d2 = $@"{dir}\{i + 1 - numberOfChaptersPerFile}-{i}.txt";
-                await File.WriteAllLinesAsync(d2, chapters
-                    .Select(c => string.Join("\n".Repeat(whiteLinesBetweenLines + 1), c)));
+        var d2 =
+            $@"{dir}\{i + 1 - (i % numberOfChaptersPerFile == 0 ? numberOfChaptersPerFile : i % numberOfChaptersPerFile)}-{i}.txt";
+        await File.WriteAllLinesAsync(d2, chapters
+            .Select(c => string.Join("\n".Repeat(whiteLinesBetweenLines + 1), c)));
     }
 }

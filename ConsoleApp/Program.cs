@@ -18,9 +18,9 @@ var sender = new TelegramBot(api);
 var myChat = telegramConfig.Chats.Ggghhhggg;
 var autoSender = new AutomateSendPoll(myChat, sender);
 
-// var dir = @"C:\Users\nasse\OneDrive\Desktop\KolNovel\RI";
-// await ScrappingSites.ScrapeKolNovel(
-//      "https://kolnovel.com/series/%d8%a7%d9%84%d9%82%d8%b3-%d8%a7%d9%84%d9%85%d8%ac%d9%86%d9%88%d9%86/", dir,numberOfChaptersPerFile:300);
+var dir = @"C:\Users\nasse\OneDrive\Desktop\KolNovel\TEST";
+await ScrappingSites.ScrapeKolNovel(
+      "https://kolnovel.com/series/%d8%a7%d9%84%d8%b9%d8%b5%d8%b1-%d8%a7%d9%84%d9%85%d9%84%d8%ad%d9%85%d9%8a/", dir,numberOfChaptersPerFile:100);
 
 
 
