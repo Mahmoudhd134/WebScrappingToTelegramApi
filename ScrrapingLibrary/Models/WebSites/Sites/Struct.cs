@@ -8,6 +8,7 @@
         AnswerB,
         AnswerC,
         AnswerD,
+        AnswerE,
         RightAnswer,
         Explanation
     }

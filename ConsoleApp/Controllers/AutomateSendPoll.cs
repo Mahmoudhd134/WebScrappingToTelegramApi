@@ -76,32 +76,52 @@ public class AutomateSendPoll
         await MakeAFileAsync(quizModels, @"C:\Users\nasse\OneDrive\Desktop\d.txt");
     }
 
+    public async Task StartSanFoundry(string url, string path = null)
+    {
+        var scrapper = new WebScrapper<IEnumerable<QuizModel>>(new SanFoundryAltimate(url));
+        var quizModels = (await scrapper.GetData()).ToList();
+        await Send(quizModels);
+
+        if (string.IsNullOrWhiteSpace(path) == false)
+            await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(quizModels));
+    }
+
+    public async Task StartStackHowTo(string url, string path = null)
+    {
+        var scrapper = new WebScrapper<IEnumerable<QuizModel>>(new Stackhowto(url));
+        var quizModels = (await scrapper.GetData()).ToList();
+        await Send(quizModels);
+
+        if (string.IsNullOrWhiteSpace(path) == false)
+            await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(quizModels));
+    }
+
     public async Task StartSanFoundryAlgorithms()
     {
         IEnumerable<string> GetSites()
         {
             var sites = new List<string>();
             sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-linear-search-iterative/");
-            sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-binary-search-iterative/");
-            sites.Add("https://www.sanfoundry.com/insertion-sort-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/insertion-sort-interview-questions-answers/");
-            sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-selection-sort/");
-            sites.Add("https://www.sanfoundry.com/merge-sort-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/quicksort-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/quicksort-interview-questions-answers/");
-            sites.Add("https://www.sanfoundry.com/quicksort-questions-answers-entrance-exams/");
-            sites.Add("https://www.sanfoundry.com/quicksort-random-sampling-multiple-choice-questions-answers-mcqs/");
-            sites.Add(
-                "https://www.sanfoundry.com/quicksort-median-three-partitioning-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/heapsort-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/heapsort-interview-questions-answers/");
-            sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-breadth-first-search/");
-            sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-uniform-binary-search/");
-            sites.Add("https://www.sanfoundry.com/linear-search-recursive-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/masters-theorem-interview-questions-answers/");
-            sites.Add("https://www.sanfoundry.com/masters-theorem-multiple-choice-questions-answers-mcqs/");
-            sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-quiz/");
-            sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-search-element-array-recursion-1/");
+            // sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-binary-search-iterative/");
+            // sites.Add("https://www.sanfoundry.com/insertion-sort-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/insertion-sort-interview-questions-answers/");
+            // sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-selection-sort/");
+            // sites.Add("https://www.sanfoundry.com/merge-sort-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/quicksort-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/quicksort-interview-questions-answers/");
+            // sites.Add("https://www.sanfoundry.com/quicksort-questions-answers-entrance-exams/");
+            // sites.Add("https://www.sanfoundry.com/quicksort-random-sampling-multiple-choice-questions-answers-mcqs/");
+            // sites.Add(
+            //     "https://www.sanfoundry.com/quicksort-median-three-partitioning-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/heapsort-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/heapsort-interview-questions-answers/");
+            // sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-breadth-first-search/");
+            // sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-uniform-binary-search/");
+            // sites.Add("https://www.sanfoundry.com/linear-search-recursive-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/masters-theorem-interview-questions-answers/");
+            // sites.Add("https://www.sanfoundry.com/masters-theorem-multiple-choice-questions-answers-mcqs/");
+            // sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-quiz/");
+            // sites.Add("https://www.sanfoundry.com/data-structure-questions-answers-search-element-array-recursion-1/");
             return sites;
         }
 
@@ -114,6 +134,12 @@ public class AutomateSendPoll
         foreach (var webScrapper in GetScrappers())
             if (await _sender.Send(_chatId, await webScrapper.GetData()) == false)
                 throw new Exception("Error Happen");
+
+        List<QuizModel> quizModels = new();
+        foreach (var webScrapper in GetScrappers())
+            quizModels.AddRange(await webScrapper.GetData());
+        await File.WriteAllTextAsync(@"E:\WebScrappingToTelegramApi\ConsoleApp\wwwroot\files\algo.json",
+            JsonConvert.SerializeObject(quizModels));
     }
 
     public async Task StartSanFoundryImageProcessing()
@@ -135,14 +161,19 @@ public class AutomateSendPoll
                 throw new Exception("Error Happen");
     }
 
-    public async Task StartCompsciedu(string url, int startPage, int endPage)
+    public async Task StartCompsciedu(string url, int startPage, int endPage, string path = null)
     {
+        var all = new List<QuizModel>();
         for (; startPage <= endPage; startPage++)
         {
             var scrapper = new WebScrapper<IEnumerable<QuizModel>>(new Compsciedu(url + startPage));
-            if (await _sender.Send(_chatId, await scrapper.GetData()) == false)
-                throw new Exception("Error Happen");
+            var quizModels = (await scrapper.GetData()).ToList();
+            await Send(quizModels);
+            all.AddRange(quizModels);
         }
+
+        if (string.IsNullOrWhiteSpace(path) == false)
+            await File.WriteAllTextAsync(path, JsonConvert.SerializeObject(all));
     }
 
     public async Task StartWordByWordMCQPdf(string path)
@@ -172,7 +203,7 @@ public class AutomateSendPoll
     {
         var text = string.Join("\n\n-------------------------\n\n", quizzes
             .Select(qu =>
-                $"Q) {qu.Question}\n\n\n" +
+                $"Q) {qu.Question.Trim()}\n\n\n" +
                 $"{string.Join("\n", qu.GetOptions())}\n\n" +
                 $"Answer: {qu.RightAnswer}\n" +
                 $"Explanation: {qu.Explanation}"
@@ -181,5 +212,33 @@ public class AutomateSendPoll
         await using var fileStream = new FileStream(outPath, FileMode.Create);
         await using var streamWriter = new StreamWriter(fileStream);
         await streamWriter.WriteLineAsync(text);
+    }
+    
+    public async Task MakeAnHtmlFileAsync(IEnumerable<QuizModel> quizzes, string outPath)
+    {
+        var text = string.Join("\n\n-------------------------\n\n", quizzes
+            .Select(qu =>
+                $"Q) {qu.Question.Trim()}\n\n\n" +
+                $"{string.Join("\n", qu.GetOptions())}\n\n" +
+                $"Answer: {qu.RightAnswer}\n" +
+                $"Explanation: {qu.Explanation}"
+            ));
+
+        await using var fileStream = new FileStream(outPath, FileMode.Create);
+        await using var streamWriter = new StreamWriter(fileStream);
+        await streamWriter.WriteLineAsync(text);
+    }
+
+    private async Task Send(IEnumerable<QuizModel> quizModels)
+    {
+        return;
+        if (await _sender.Send(_chatId, quizModels) == false)
+            throw new Exception("Error Happen");
+    }
+
+    private async Task Send(QuizModel quizModel)
+    {
+        if (await _sender.Send(_chatId, quizModel) == false)
+            throw new Exception("Error Happen");
     }
 }

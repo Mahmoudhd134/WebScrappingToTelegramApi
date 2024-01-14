@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace ConsoleApp.Helpers;
+namespace ScrapingLibrary.Helpers;
 
 public static class StringExtensionMethods
 {

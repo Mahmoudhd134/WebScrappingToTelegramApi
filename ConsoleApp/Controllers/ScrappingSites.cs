@@ -4,6 +4,7 @@ using ScrapingLibrary.Models.WebSites.Sites;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using ScrapingLibrary.Helpers;
 
 namespace ConsoleApp.Controllers;
 

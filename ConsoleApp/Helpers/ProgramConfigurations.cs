@@ -8,7 +8,7 @@ public class ProgramConfigurations
     {
         var builder = new ConfigurationBuilder();
         builder
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(),""))
             .AddJsonFile(fileName, optional: false, reloadOnChange: true);
         return builder.Build();
     }

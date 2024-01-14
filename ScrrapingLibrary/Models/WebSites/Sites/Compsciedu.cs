@@ -16,14 +16,11 @@ namespace ScrapingLibrary.Models.WebSites.Sites
             var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(html);
             var firstQuesNoAsString = string.Join("",
-                htmlDocument.DocumentNode.Descendants("div")
-                    .First(d => d.GetAttributeValue("class", "").Equals("innerDiv"))
-                    .ChildNodes
-                    .First(c => c.GetAttributeValue("class", "").Equals("quescontainer"))
+                htmlDocument.DocumentNode.Descendants("span")
+                    .First(s => s.GetAttributeValue("class", "") == "fw-bold mx-3")
                     .InnerText
-                    .Split("\n")
-                    .First(s => string.IsNullOrWhiteSpace(s) == false)
                     .Trim()
+                    .Skip(1)
                     .SkipLast(1));
 
             var no = int.Parse(firstQuesNoAsString);
@@ -36,33 +33,23 @@ namespace ScrapingLibrary.Models.WebSites.Sites
             var q = new List<QuizModel>();
             var strings = htmlDocument.DocumentNode
                 .Descendants("div")
-                .First(d => d.GetAttributeValue("class", "").Equals("innerDiv"))
+                .First(d => d.GetAttributeValue("class", "").Equals("col-lg-6"))
                 .InnerText;
 
-            var wholeText = string
-                .Join("\n", strings)
+            var wholeText = strings
                 .Split("\n")
                 .Select(s => HttpUtility.HtmlDecode(s.Trim()))
-                .Where(s => s.Length > 0 && s.ToLower().Equals("discuss") == false &&
+                .Where(s => string.IsNullOrWhiteSpace(s) == false &&
+                            s.ToLower().Equals("discuss") == false &&
                             s.ToLower().Equals("report") == false &&
                             s.ToLower().Equals("too difficult!") == false &&
-                            s.ToLower().Equals("view answer") == false &&
-                            string.IsNullOrWhiteSpace(s) == false);
+                            s.ToLower().Equals("view solution") == false);
 
             var mode = Struct.Nothing;
             var quiz = new QuizModel();
             foreach (var line in wholeText)
             {
-                if (line.ToLower().StartsWith("sanfoundry global"))
-                    break;
-
-                // if (line.ToLower().StartsWith("http"))
-                // {
-                //     quiz.Img = line;
-                //     continue;
-                // }
-
-                if (line.Trim().ToLower().StartsWith((currentQuizNum).ToString()))
+                if (line.Trim().StartsWith($"Q{currentQuizNum}."))
                 {
                     if (mode == Struct.Explanation) //the previuos question ends
                     {
@@ -100,7 +87,7 @@ namespace ScrapingLibrary.Models.WebSites.Sites
                     mode = Struct.Explanation;
                     var correctAnswer = line[9];
                     quiz.RightAnswer = char.ToString(correctAnswer);
-                    quiz.Explanation = "NO EXPLENATION";
+                    quiz.Explanation = null;
                 }
                 else if (line.Trim().ToLower().StartsWith("explanation:"))
                 {
@@ -133,7 +120,7 @@ namespace ScrapingLibrary.Models.WebSites.Sites
                             break;
 
                         case Struct.Explanation:
-                            quiz.Explanation  += "\n" + line;
+                            quiz.Explanation += "\n" + line;
                             break;
 
                         default:
@@ -149,7 +136,27 @@ namespace ScrapingLibrary.Models.WebSites.Sites
                 q.Add(quiz);
             }
 
-            return q;
+            string ReplaceFirstNewLineWithSpace(string s)
+            {
+                if (string.IsNullOrWhiteSpace(s))
+                    return s;
+
+                var splits = s.Split("\n");
+                return (splits[0] + " " + string.Join("\n", splits.Skip(1))).Trim();
+            }
+
+            return q.Select(x => new QuizModel()
+                {
+                    Question = ReplaceFirstNewLineWithSpace(x.Question),
+                    AnswerA = ReplaceFirstNewLineWithSpace(x.AnswerA),
+                    AnswerB = ReplaceFirstNewLineWithSpace(x.AnswerB),
+                    AnswerC = ReplaceFirstNewLineWithSpace(x.AnswerC),
+                    AnswerD = ReplaceFirstNewLineWithSpace(x.AnswerD),
+                    AnswerE = ReplaceFirstNewLineWithSpace(x.AnswerE),
+                    RightAnswer = ReplaceFirstNewLineWithSpace(x.RightAnswer),
+                    Explanation = ReplaceFirstNewLineWithSpace(x.Explanation)
+                })
+                .ToList();
         }
 
         public virtual async Task<string> GetHtml(string url)
